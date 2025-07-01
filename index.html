@@ -1,11 +1,15 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Memory TV in A-Frame</title>
+    <title>Memory TV - Desktop Only</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="script.js" defer></script>
     <style>
-      body { margin: 0; overflow: hidden; }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+
       #ui {
         position: absolute;
         top: 20px;
@@ -15,6 +19,7 @@
         gap: 10px;
         z-index: 999;
       }
+
       .btn {
         padding: 10px 20px;
         background: #222;
@@ -24,7 +29,8 @@
         cursor: pointer;
         border-radius: 5px;
       }
-      #choices {
+
+      .choice-container {
         position: absolute;
         bottom: 20px;
         left: 50%;
@@ -35,38 +41,30 @@
       }
     </style>
   </head>
+
   <body>
+    <!-- UI Controls -->
     <div id="ui">
-      <button class="btn" onclick="changeChannel(-1)">⏮ Prev</button>
+      <button class="btn" onclick="changeChannel(-1)">⏮ Previous</button>
       <button class="btn" onclick="changeChannel(1)">⏭ Next</button>
     </div>
 
-    <div id="choices"></div>
+    <!-- Choice Buttons -->
+    <div id="choices" class="choice-container"></div>
 
+    <!-- A-Frame Scene -->
     <a-scene>
       <!-- Camera -->
       <a-entity position="0 1.6 4">
         <a-camera look-controls="enabled: false" wasd-controls-enabled="false"></a-camera>
       </a-entity>
 
-      <!-- Floor & Environment -->
-      <a-plane rotation="-90 0 0" width="20" height="20" color="#222"></a-plane>
-      <a-sky color="#111"></a-sky>
-
       <!-- TV Frame -->
-      <a-box position="0 2 -3" depth="0.2" height="2" width="3" color="#333"></a-box>
+      <a-box position="0 2 -3" width="3" height="2" depth="0.2" color="#444"></a-box>
 
       <!-- TV Screen -->
       <a-entity id="tvScreen"
-        geometry="primitive: plane; height: 1.5; width: 2.5"
+        geometry="primitive: plane; width: 2.5; height: 1.5"
         position="0 2 -2.89"
-        material="color: black"
-        text="value: Loading...; align: center; color: #0f0; wrapCount: 30">
-      </a-entity>
+        materia
 
-      <!-- Lights -->
-      <a-entity light="type: ambient; intensity: 0.5"></a-entity>
-      <a-entity light="type: directional; intensity: 0.6" position="1 4 2"></a-entity>
-    </a-scene>
-  </body>
-</html>
