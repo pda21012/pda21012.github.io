@@ -1,12 +1,41 @@
-<html> 
+<html>
   <head>
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <meta charset="utf-8" />
+    <title>Memory TV in A-Frame</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="script.js" defer></script>
   </head>
   <body>
-    <a-scene background="color:cadetblue">
-      <a-plane height="100" width="100" rotation="-90 0 0"></a-plane>
-        <a-box position="1 5 -6" color="firebrick" scale="2 1 1"></a-box>
-       </a-scene> 
+    <a-scene>
+      <!-- Camera & Controls -->
+      <a-entity position="0 1.6 4">
+        <a-camera wasd-controls-enabled="true" look-controls-enabled="true"></a-camera>
+      </a-entity>
+
+      <!-- Floor & Environment -->
+      <a-plane rotation="-90 0 0" width="20" height="20" color="#222"></a-plane>
+      <a-sky color="#111"></a-sky>
+
+      <!-- TV Frame -->
+      <a-box position="0 2 -3" depth="0.2" height="2" width="3" color="#333"></a-box>
+
+      <!-- TV Screen -->
+      <a-entity id="tvScreen"
+                geometry="primitive: plane; height: 1.5; width: 2.5"
+                position="0 2 -2.89"
+                material="color: black"
+                text="value: Loading...; align: center; color: #0f0; wrapCount: 30">
+      </a-entity>
+
+      <!-- Channel Buttons -->
+      <a-box position="-0.8 1 -2.8" width="0.3" height="0.3" depth="0.1" color="#666"
+             class="clickable" channel-change="-1"></a-box>
+      <a-box position="0.8 1 -2.8" width="0.3" height="0.3" depth="0.1" color="#666"
+             class="clickable" channel-change="1"></a-box>
+
+      <!-- Lights -->
+      <a-entity light="type: ambient; intensity: 0.5"></a-entity>
+      <a-entity light="type: directional; intensity: 0.6" position="1 4 2"></a-entity>
+    </a-scene>
   </body>
 </html>
-<a-box position="0.25258 1.26169 -4.76048" color="firebrick" scale="2 1 1"></a-box>
