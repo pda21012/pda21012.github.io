@@ -1,76 +1,91 @@
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Memory TV in A-Frame</title>
+  <meta charset="UTF-8" />
+  <title>Memory TV with Images, Sound & Static Transition</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="script.js" defer></script>
   <style>
     body {
-      margin: 0;
-      overflow: hidden;
+      margin: 0; overflow: hidden; background: #111; color: #0f0;
+      font-family: monospace;
+      user-select: none;
     }
-
     #ui {
       position: absolute;
-      top: 20px;
-      left: 50%;
+      top: 20px; left: 50%;
       transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
+      display: flex; gap: 10px;
       z-index: 10;
     }
-
     .btn {
       padding: 10px 20px;
       background: #222;
       color: #0f0;
-      font-family: monospace;
       border: 2px solid #0f0;
-      cursor: pointer;
       border-radius: 5px;
+      cursor: pointer;
+      font-size: 18px;
     }
-
     #choices {
       position: absolute;
-      bottom: 20px;
-      left: 50%;
+      bottom: 20px; left: 50%;
       transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
+      display: flex; gap: 10px;
       z-index: 10;
     }
   </style>
 </head>
-
 <body>
-  <!-- UI Buttons -->
+
+  <!-- UI Controls -->
   <div id="ui">
     <button class="btn" onclick="changeChannel(-1)">⏮ Prev</button>
     <button class="btn" onclick="changeChannel(1)">⏭ Next</button>
   </div>
 
-  <!-- Choice Buttons will be injected here -->
+  <!-- Choices Buttons -->
   <div id="choices"></div>
+
+  <!-- Audio element for sound -->
+  <audio id="tvSound" preload="auto"></audio>
 
   <!-- A-Frame Scene -->
   <a-scene>
-    <!-- Camera -->
+
+    <!-- Camera, fixed position -->
     <a-entity position="0 1.6 4">
       <a-camera look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
     </a-entity>
 
-    <!-- TV Box -->
+    <!-- TV Body -->
     <a-box position="0 2 -3" depth="0.2" height="2" width="3" color="#333"></a-box>
 
-    <!-- TV Screen -->
-    <a-entity id="tvScreen"
-      geometry="primitive: plane; height: 1.5; width: 2.5"
-      position="0 2 -2.89"
-      material="color: black"
-      text="value: Loading...; align: center; color: #0f0; wrapCount: 30">
+    <!-- TV Screen Text -->
+    <a-entity id="tvScreenText"
+              geometry="primitive: plane; height: 1.5; width: 2.5"
+              position="0 2 -2.89"
+              material="color: black"
+              text="value: Loading...; align: center; color: #0f0; wrapCount: 30">
     </a-entity>
 
-    <!-- Environment -->
+    <!-- TV Screen Image -->
+    <a-image id="tvScreenImage"
+             position="0 2 -2.89"
+             geometry="primitive: plane; height: 1.5; width: 2.5"
+             visible="false">
+    </a-image>
+
+    <!-- TV Static overlay for transition -->
+    <a-assets>
+      <img id="staticTexture" src="https://i.imgur.com/3sZfWcP.gif" crossorigin="anonymous" />
+    </a-assets>
+    <a-plane id="tvStatic"
+             position="0 2 -2.88"
+             width="2.5" height="1.5"
+             material="shader: flat; src: #staticTexture; transparent: true"
+             visible="false">
+    </a-plane>
+
+    <!-- Floor and environment -->
     <a-plane rotation="-90 0 0" width="20" height="20" color="#222"></a-plane>
     <a-sky color="#111"></a-sky>
 
@@ -78,5 +93,126 @@
     <a-entity light="type: ambient; intensity: 0.5"></a-entity>
     <a-entity light="type: directional; intensity: 0.6" position="1 4 2"></a-entity>
   </a-scene>
+
+  <script>
+    let currentChannel = 0;
+
+    const channels = [
+      {
+        text: "📺 Welcome to Memory TV!\nClick next to start flipping.",
+        image: null,
+        sound: null,
+        choices: []
+      },
+      {
+        text: "🌍 Nature Documentary\nDo you like forests or oceans?",
+        image: "https://cdn.aframe.io/examples/ui/forest.jpg",
+        sound: "https://cdn.freesound.org/previews/341/341695_5260879-lq.mp3",
+        choices: [
+          { label: "🌲 Forests", next: 2 },
+          { label: "🌊 Oceans", next: 3 }
+        ]
+      },
+      {
+        text: "🌲 You chose forests.\nPeaceful trees surround you.",
+        image: "https://cdn.aframe.io/examples/ui/trees.jpg",
+        sound: "https://cdn.freesound.org/previews/203/203793_2859975-lq.mp3",
+        choices: []
+      },
+      {
+        text: "🌊 You chose oceans.\nWaves crash gently on a reef.",
+        image: "https://cdn.aframe.io/examples/ui/ocean.jpg",
+        sound: "https://cdn.freesound.org/previews/198/198841_2859975-lq.mp3",
+        choices: []
+      },
+      {
+        text: "🎮 Interactive game channel.\nChoose your path:",
+        image: null,
+        sound: null,
+        choices: [
+          { label: "🕹️ Left Path", next: 5 },
+          { label: "🕹️ Right Path", next: 6 }
+        ]
+      },
+      {
+        text: "🏞️ You went left and found a hidden village.",
+        image: "https://cdn.aframe.io/examples/ui/village.jpg",
+        sound: "https://cdn.freesound.org/previews/348/348789_3248244-lq.mp3",
+        choices: []
+      },
+      {
+        text: "🧟‍♂️ You went right and encountered zombies!",
+        image: "https://cdn.aframe.io/examples/ui/zombies.jpg",
+        sound: "https://cdn.freesound.org/previews/231/231203_4019025-lq.mp3",
+        choices: []
+      }
+    ];
+
+    function showChannel(index) {
+      const screenText = document.querySelector('#tvScreenText');
+      const screenImage = document.querySelector('#tvScreenImage');
+      const choicesDiv = document.querySelector('#choices');
+      const audio = document.querySelector('#tvSound');
+      const staticPlane = document.querySelector('#tvStatic');
+
+      const channel = channels[index];
+      if (!channel) return;
+
+      // Show static transition first
+      staticPlane.setAttribute('visible', 'true');
+
+      setTimeout(() => {
+        staticPlane.setAttribute('visible', 'false');
+
+        // Show image or text
+        if (channel.image) {
+          screenText.setAttribute('visible', 'false');
+          screenImage.setAttribute('visible', 'true');
+          screenImage.setAttribute('src', channel.image);
+        } else {
+          screenImage.setAttribute('visible', 'false');
+          screenText.setAttribute('visible', 'true');
+          screenText.setAttribute('text', 'value', channel.text);
+        }
+
+        // Play sound if present
+        if (channel.sound) {
+          audio.src = channel.sound;
+          audio.play();
+        } else {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+
+        // Show choices
+        choicesDiv.innerHTML = '';
+        if (channel.choices && channel.choices.length) {
+          channel.choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.textContent = choice.label;
+            btn.onclick = () => {
+              currentChannel = choice.next;
+              showChannel(currentChannel);
+            };
+            choicesDiv.appendChild(btn);
+          });
+        }
+      }, 1000); // 1 second static
+    }
+
+    function changeChannel(delta) {
+      currentChannel += delta;
+      if (currentChannel < 0) currentChannel = 0;
+      if (currentChannel >= channels.length) currentChannel = channels.length - 1;
+      showChannel(currentChannel);
+    }
+
+    window.onload = () => {
+      showChannel(currentChannel);
+      window.changeChannel = changeChannel; // for buttons
+    };
+  </script>
+
 </body>
 </html>
